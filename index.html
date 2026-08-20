@@ -3,69 +3,161 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clinic Triage & Booking Guide</title>
+  <title>Clinic Triage & Duration Calculator</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 20px; background-color: #f8f9fa; }
-    h2 { color: #2c3e50; margin-bottom: 10px; }
-    #searchBar { width: 100%; padding: 12px 16px; font-size: 18px; border: 2px solid #007bff; border-radius: 6px; box-sizing: border-box; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; background: #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; }
-    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-    th { background-color: #007bff; color: white; font-size: 16px; }
-    tr:hover { background-color: #f1f1f1; }
-    .badge { padding: 6px 12px; border-radius: 4px; font-weight: bold; color: white; display: inline-block; }
-    .badge-60 { background-color: #dc3545; } /* Red for 1 hour */
-    .badge-30 { background-color: #28a745; } /* Green for 30 min */
-    .badge-15 { background-color: #17a2b8; } /* Blue for 15 min */
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
+    .container { max-width: 900px; margin: auto; }
+    h2 { color: #2c3e50; }
+    
+    /* Result Display Banner */
+    #result-banner {
+      position: sticky; top: 10px; z-index: 100;
+      background: #ffffff; border: 2px solid #007bff; border-radius: 8px;
+      padding: 15px 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .duration-display { font-size: 24px; font-weight: bold; color: #007bff; }
+    .btn-reset { background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+    .btn-reset:hover { background: #5a6268; }
+
+    /* Search Bar */
+    #searchBar { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-bottom: 15px; }
+
+    /* Symptom List / Checklist */
+    .symptom-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+    .symptom-card {
+      background: white; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px;
+      display: flex; align-items: flex-start; gap: 10px; cursor: pointer; transition: 0.15s;
+    }
+    .symptom-card:hover { border-color: #007bff; background: #f0f7ff; }
+    .symptom-card input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; cursor: pointer; }
+    .symptom-info { flex-grow: 1; }
+    .symptom-name { font-weight: bold; font-size: 15px; display: block; }
+    .symptom-meta { font-size: 12px; color: #666; margin-top: 3px; display: block; }
+
+    /* Badge Styling */
+    .badge { padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 12px; color: white; float: right; }
+    .badge-60 { background-color: #dc3545; } /* Red */
+    .badge-30 { background-color: #28a745; } /* Green */
+    .badge-15 { background-color: #17a2b8; } /* Blue */
   </style>
 </head>
 <body>
 
-  <h2>Clinic Triage & Appointment Guide</h2>
-  <input type="text" id="searchBar" onkeyup="filterTable()" placeholder="Type symptom or reason (e.g., abdominal, throat, rash)..." autofocus>
+<div class="container">
+  <h2>Clinic Triage Calculator</h2>
+  
+  <!-- Dynamic Result Area -->
+  <div id="result-banner">
+    <div>
+      <span>Required Booking Duration:</span>
+      <div id="duration-text" class="duration-display">0 Minutes (Select Symptoms)</div>
+      <small id="selected-list" style="color: #666;">No symptoms checked</small>
+    </div>
+    <button class="btn-reset" onclick="resetAll()">Clear All</button>
+  </div>
 
-  <table id="triageTable">
-    <thead>
-      <tr>
-        <th>Symptom / Reason for Visit</th>
-        <th>Duration</th>
-        <th>Triage Notes / Intake Questions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Abdominal Pain</strong></td>
-        <td><span class="badge badge-60">60 Minutes</span></td>
-        <td>Ask about duration, severity, fever, or nausea. Book with GP.</td>
-      </tr>
-      <tr>
-        <td><strong>Sore Throat</strong></td>
-        <td><span class="badge badge-30">30 Minutes</span></td>
-        <td>Check for fever or difficulty swallowing. Standard slot.</td>
-      </tr>
-      <tr>
-        <td><strong>Rash / Skin Condition</strong></td>
-        <td><span class="badge badge-30">30 Minutes</span></td>
-        <td>Ask if spreading rapidly or causing pain.</td>
-      </tr>
-      <tr>
-        <td><strong>Prescription Renewal</strong></td>
-        <td><span class="badge badge-15">15 Minutes</span></td>
-        <td>Confirm medication name and pharmacy preference.</td>
-      </tr>
-    </tbody>
-  </table>
+  <!-- Quick Filter -->
+  <input type="text" id="searchBar" onkeyup="filterSymptoms()" placeholder="Search symptom (e.g. throat, pain, rash)...">
 
-  <script>
-    function filterTable() {
-      const input = document.getElementById("searchBar").value.toLowerCase();
-      const rows = document.querySelectorAll("#triageTable tbody tr");
+  <!-- Checklist Options -->
+  <div class="symptom-grid" id="symptomGrid">
+    
+    <label class="symptom-card" data-minutes="60" data-name="Abdominal Pain">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Abdominal Pain</span>
+        <span class="symptom-meta">Ask severity, fever, nausea. Book GP.</span>
+      </div>
+    </label>
 
-      rows.forEach(row => {
-        const text = row.innerText.toLowerCase();
-        row.style.display = text.includes(input) ? "" : "none";
-      });
+    <label class="symptom-card" data-minutes="60" data-name="Chest Discomfort / Pain">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Chest Discomfort</span>
+        <span class="symptom-meta">Rule out emergency first. Extended slot.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Sore Throat">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Sore Throat</span>
+        <span class="symptom-meta">Check fever, difficulty swallowing.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Skin Rash / Lesion">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Skin Rash</span>
+        <span class="symptom-meta">Ask onset date & pain/itching level.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="15" data-name="Prescription Renewal">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-15">15 Min</span>
+        <span class="symptom-name">Prescription Renewal</span>
+        <span class="symptom-meta">Confirm pharmacy and medication list.</span>
+      </div>
+    </label>
+
+  </div>
+</div>
+
+<script>
+  function calculateDuration() {
+    const checkboxes = document.querySelectorAll('#symptomGrid input[type="checkbox"]:checked');
+    let maxMinutes = 0;
+    let selectedNames = [];
+
+    checkboxes.forEach(cb => {
+      const card = cb.closest('.symptom-card');
+      const mins = parseInt(card.getAttribute('data-minutes'));
+      const name = card.getAttribute('data-name');
+      
+      if (mins > maxMinutes) maxMinutes = mins;
+      selectedNames.push(name);
+    });
+
+    const durationText = document.getElementById('duration-text');
+    const selectedList = document.getElementById('selected-list');
+
+    if (maxMinutes > 0) {
+      durationText.innerText = maxMinutes + " Minutes Required";
+      durationText.style.color = maxMinutes >= 60 ? "#dc3545" : "#28a745";
+      selectedList.innerText = "Selected: " + selectedNames.join(", ");
+    } else {
+      durationText.innerText = "0 Minutes (Select Symptoms)";
+      durationText.style.color = "#007bff";
+      selectedList.innerText = "No symptoms checked";
     }
-  </script>
+  }
+
+  function filterSymptoms() {
+    const query = document.getElementById('searchBar').value.toLowerCase();
+    const cards = document.querySelectorAll('.symptom-card');
+
+    cards.forEach(card => {
+      const text = card.innerText.toLowerCase();
+      card.style.display = text.includes(query) ? "flex" : "none";
+    });
+  }
+
+  function resetAll() {
+    const checkboxes = document.querySelectorAll('#symptomGrid input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+    document.getElementById('searchBar').value = '';
+    filterSymptoms();
+    calculateDuration();
+  }
+</script>
 
 </body>
 </html>
