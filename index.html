@@ -3,40 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clinic Triage & Duration Calculator</title>
+  <title>Clinic Triage & Appointment Calculator</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
-    .container { max-width: 900px; margin: auto; }
-    h2 { color: #2c3e50; }
+    .container { max-width: 1000px; margin: auto; }
+    h2 { color: #2c3e50; margin-bottom: 5px; }
+    p.subtitle { color: #666; font-size: 14px; margin-top: 0; margin-bottom: 15px; }
     
     /* Result Display Banner */
     #result-banner {
       position: sticky; top: 10px; z-index: 100;
       background: #ffffff; border: 2px solid #007bff; border-radius: 8px;
-      padding: 15px 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 15px 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
       display: flex; justify-content: space-between; align-items: center;
     }
     .duration-display { font-size: 24px; font-weight: bold; color: #007bff; }
-    .btn-reset { background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+    .btn-reset { background: #6c757d; color: white; border: none; padding: 10px 18px; font-size: 14px; border-radius: 4px; cursor: pointer; font-weight: bold; }
     .btn-reset:hover { background: #5a6268; }
 
     /* Search Bar */
-    #searchBar { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-bottom: 15px; }
+    #searchBar { width: 100%; padding: 12px 16px; font-size: 16px; border: 2px solid #ced4da; border-radius: 6px; box-sizing: border-box; margin-bottom: 20px; }
+    #searchBar:focus { border-color: #007bff; outline: none; }
 
-    /* Symptom List / Checklist */
-    .symptom-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+    /* Symptom Grid */
+    .symptom-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
     .symptom-card {
-      background: white; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px;
-      display: flex; align-items: flex-start; gap: 10px; cursor: pointer; transition: 0.15s;
+      background: white; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px 15px;
+      display: flex; align-items: flex-start; gap: 12px; cursor: pointer; transition: background 0.15s, border-color 0.15s;
     }
     .symptom-card:hover { border-color: #007bff; background: #f0f7ff; }
-    .symptom-card input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; cursor: pointer; }
+    .symptom-card input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; }
     .symptom-info { flex-grow: 1; }
-    .symptom-name { font-weight: bold; font-size: 15px; display: block; }
-    .symptom-meta { font-size: 12px; color: #666; margin-top: 3px; display: block; }
+    .symptom-name { font-weight: bold; font-size: 15px; display: block; color: #212529; }
+    .symptom-meta { font-size: 12px; color: #6c757d; margin-top: 3px; display: block; }
 
-    /* Badge Styling */
-    .badge { padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 12px; color: white; float: right; }
+    /* Badges */
+    .badge { padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; color: white; float: right; }
     .badge-60 { background-color: #dc3545; } /* Red */
     .badge-30 { background-color: #28a745; } /* Green */
     .badge-15 { background-color: #17a2b8; } /* Blue */
@@ -46,38 +48,275 @@
 
 <div class="container">
   <h2>Clinic Triage Calculator</h2>
+  <p class="subtitle">Select all symptoms mentioned by patient. System automatically calculates max required slot time.</p>
   
-  <!-- Dynamic Result Area -->
+  <!-- Dynamic Output Banner -->
   <div id="result-banner">
     <div>
-      <span>Required Booking Duration:</span>
+      <span style="font-size: 13px; text-transform: uppercase; color: #6c757d; font-weight: bold;">Recommended Booking Duration:</span>
       <div id="duration-text" class="duration-display">0 Minutes (Select Symptoms)</div>
-      <small id="selected-list" style="color: #666;">No symptoms checked</small>
+      <small id="selected-list" style="color: #495057;">No symptoms checked</small>
     </div>
-    <button class="btn-reset" onclick="resetAll()">Clear All</button>
+    <button class="btn-reset" onclick="resetAll()">Clear Selection</button>
   </div>
 
-  <!-- Quick Filter -->
-  <input type="text" id="searchBar" onkeyup="filterSymptoms()" placeholder="Search symptom (e.g. throat, pain, rash)...">
+  <!-- Real-time Filter -->
+  <input type="text" id="searchBar" onkeyup="filterSymptoms()" placeholder="Type to search symptom (e.g. pain, throat, mental, burn, age)..." autofocus>
 
   <!-- Checklist Options -->
   <div class="symptom-grid" id="symptomGrid">
-    
+
+    <!-- 60 MINUTE APPOINTMENTS -->
     <label class="symptom-card" data-minutes="60" data-name="Abdominal Pain">
       <input type="checkbox" onchange="calculateDuration()">
       <div class="symptom-info">
         <span class="badge badge-60">60 Min</span>
         <span class="symptom-name">Abdominal Pain</span>
-        <span class="symptom-meta">Ask severity, fever, nausea. Book GP.</span>
+        <span class="symptom-meta">Ask location, severe onset, or fever.</span>
       </div>
     </label>
 
-    <label class="symptom-card" data-minutes="60" data-name="Chest Discomfort / Pain">
+    <label class="symptom-card" data-minutes="60" data-name="Age ≥ 65 (Complex Care)">
       <input type="checkbox" onchange="calculateDuration()">
       <div class="symptom-info">
         <span class="badge badge-60">60 Min</span>
-        <span class="symptom-name">Chest Discomfort</span>
-        <span class="symptom-meta">Rule out emergency first. Extended slot.</span>
+        <span class="symptom-name">Age ≥ 65 (Complex Consultation)</span>
+        <span class="symptom-meta">Senior consultation / multi-morbidity intake.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="Blood in Urine (Hematuria)">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Blood in Urine</span>
+        <span class="symptom-meta">Check for severe flank pain or fever.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="Chest Pain">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Chest Pain</span>
+        <span class="symptom-meta">Ensure non-emergent before scheduling.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="CNESST / Work Injury Initial">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">CNESST / Work Injury Intake</span>
+        <span class="symptom-meta">Initial evaluation and official paperwork.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="Cognitive Evaluation">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Cognitive Evaluation</span>
+        <span class="symptom-meta">In-depth cognitive screening.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="Chronic Joint Pain">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Chronic Joint Pain</span>
+        <span class="symptom-meta">Long-standing pain (>3 months).</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="Chronic Muscle Pain / Pain Syndrome">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Chronic Muscle / General Pain</span>
+        <span class="symptom-meta">Ongoing multi-site or chronic pain.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="Dizziness">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Dizziness</span>
+        <span class="symptom-meta">Assess lightheadedness or unsteadiness.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="Memory Evaluation">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Memory Loss / Evaluation</span>
+        <span class="symptom-meta">Memory screening assessment.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="Mental Health (New / Initial)">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Mental Health (Initial Consultation)</span>
+        <span class="symptom-meta">New depression, anxiety, burnout intake.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="Migraines / Headaches">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Migraines / Frequent Headaches</span>
+        <span class="symptom-meta">New or severe chronic headache evaluation.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="Nausea and Vomiting">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Nausea and Vomiting</span>
+        <span class="symptom-meta">Check hydration status and acute distress.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="Vertigo">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">Vertigo</span>
+        <span class="symptom-meta">Spinning sensation assessment.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="60" data-name="SAAQ / Medical / Disability Forms">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-60">60 Min</span>
+        <span class="symptom-name">SAAQ / Disability Forms</span>
+        <span class="symptom-meta">Complex medical administrative forms.</span>
+      </div>
+    </label>
+
+    <!-- 30 MINUTE APPOINTMENTS -->
+    <label class="symptom-card" data-minutes="30" data-name="Cold-like Symptoms">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Cold-like Symptoms</span>
+        <span class="symptom-meta">General upper respiratory viral symptoms.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Cough">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Cough</span>
+        <span class="symptom-meta">Acute or lingering cough evaluation.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Ear Ache">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Earache / Ear Infection</span>
+        <span class="symptom-meta">Ear pain, pressure, or drainage.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Eye Infection">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Eye Infection / Pink Eye</span>
+        <span class="symptom-meta">Redness, discharge, or irritation.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Mental Health Follow-up">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Mental Health (Follow-up)</span>
+        <span class="symptom-meta">Re-evaluation of existing care plan.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Minor Cut / Laceration">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Minor Cut / Laceration</span>
+        <span class="symptom-meta">Shallow cut or dressing check.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="1.5 cm Deep Cut">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Deep Cut (~1.5 cm)</span>
+        <span class="symptom-meta">Possible sutures/strains needed.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Minor Burn">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Minor Burn</span>
+        <span class="symptom-meta">First or localized second-degree burn.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Muscle Pain (Recent Light Trauma)">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Muscle Pain (Recent Minor Injury)</span>
+        <span class="symptom-meta">Acute mild strain from recent activity.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="New Onset Joint Pain">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">New Onset Joint Pain</span>
+        <span class="symptom-meta">Recent acute joint swelling or pain.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Sexually Transmitted Infections (STI/STD)">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">STI / STD Screening or Symptoms</span>
+        <span class="symptom-meta">Screening, exposure, or acute symptoms.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Sinus Congestion">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Sinus Congestion</span>
+        <span class="symptom-meta">Facial pressure or persistent sinus issues.</span>
+      </div>
+    </label>
+
+    <label class="symptom-card" data-minutes="30" data-name="Skin Rash / Lesion">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Skin Rash / Lesion</span>
+        <span class="symptom-meta">New rash, localized hives, or spots.</span>
       </div>
     </label>
 
@@ -86,25 +325,35 @@
       <div class="symptom-info">
         <span class="badge badge-30">30 Min</span>
         <span class="symptom-name">Sore Throat</span>
-        <span class="symptom-meta">Check fever, difficulty swallowing.</span>
+        <span class="symptom-meta">Check fever or difficulty swallowing.</span>
       </div>
     </label>
 
-    <label class="symptom-card" data-minutes="30" data-name="Skin Rash / Lesion">
+    <label class="symptom-card" data-minutes="30" data-name="Sprain / Strain">
       <input type="checkbox" onchange="calculateDuration()">
       <div class="symptom-info">
         <span class="badge badge-30">30 Min</span>
-        <span class="symptom-name">Skin Rash</span>
-        <span class="symptom-meta">Ask onset date & pain/itching level.</span>
+        <span class="symptom-name">Sprains & Strains</span>
+        <span class="symptom-meta">Joint or ligament twist (ankle, wrist).</span>
       </div>
     </label>
 
+    <label class="symptom-card" data-minutes="30" data-name="Urinary Tract Infection (UTI)">
+      <input type="checkbox" onchange="calculateDuration()">
+      <div class="symptom-info">
+        <span class="badge badge-30">30 Min</span>
+        <span class="symptom-name">Urinary Tract Infection (UTI / Dysuria)</span>
+        <span class="symptom-meta">Painful urination without visible blood.</span>
+      </div>
+    </label>
+
+    <!-- 15 MINUTE APPOINTMENTS -->
     <label class="symptom-card" data-minutes="15" data-name="Prescription Renewal">
       <input type="checkbox" onchange="calculateDuration()">
       <div class="symptom-info">
         <span class="badge badge-15">15 Min</span>
         <span class="symptom-name">Prescription Renewal</span>
-        <span class="symptom-meta">Confirm pharmacy and medication list.</span>
+        <span class="symptom-meta">Uncomplicated routine med refill.</span>
       </div>
     </label>
 
@@ -132,7 +381,7 @@
     if (maxMinutes > 0) {
       durationText.innerText = maxMinutes + " Minutes Required";
       durationText.style.color = maxMinutes >= 60 ? "#dc3545" : "#28a745";
-      selectedList.innerText = "Selected: " + selectedNames.join(", ");
+      selectedList.innerText = "Selected (" + selectedNames.length + "): " + selectedNames.join(" | ");
     } else {
       durationText.innerText = "0 Minutes (Select Symptoms)";
       durationText.style.color = "#007bff";
