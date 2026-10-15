@@ -365,6 +365,10 @@
     const checkboxes = document.querySelectorAll('#symptomGrid input[type="checkbox"]:checked');
     let maxMinutes = 0;
     let selectedNames = [];
+    
+    // Define the list of cold-like symptoms to exclude from the multi-selection rule
+    const excludedColdSymptoms = ["Cold-like Symptoms", "Cough", "Sinus Congestion", "Sore Throat"];
+    let nonColdCount = 0;
 
     checkboxes.forEach(cb => {
       const card = cb.closest('.symptom-card');
@@ -373,7 +377,17 @@
       
       if (mins > maxMinutes) maxMinutes = mins;
       selectedNames.push(name);
+
+      // Check if this symptom is NOT part of the cold-like group
+      if (!excludedColdSymptoms.includes(name)) {
+        nonColdCount++;
+      }
     });
+
+    // Rule: If more than one non-cold symptom is checked, force 60 minutes
+    if (nonColdCount > 1 && maxMinutes < 60) {
+      maxMinutes = 60;
+    }
 
     const durationText = document.getElementById('duration-text');
     const selectedList = document.getElementById('selected-list');
