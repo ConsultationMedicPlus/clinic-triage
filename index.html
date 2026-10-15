@@ -366,11 +366,11 @@
     let maxMinutes = 0;
     let selectedNames = [];
     
-    let thirtyMinCount = 0;
-    let nonExceptionThirtyMinCount = 0;
-
-    // Define symptoms that are allowed to be combined together at 30 minutes
-    const exceptionGroup = ["Cold-like Symptoms", "Cough", "Sinus Congestion", "Sore Throat"];
+    // List of cold/respiratory symptoms that can be combined together without triggering 60 mins
+    const coldExceptions = ["Cold-like Symptoms", "Cough", "Sinus Congestion", "Sore Throat"];
+    
+    let totalSelected = 0;
+    let hasNonColdSymptom = false;
 
     checkboxes.forEach(cb => {
       const card = cb.closest('.symptom-card');
@@ -379,18 +379,18 @@
       
       if (mins > maxMinutes) maxMinutes = mins;
       selectedNames.push(name);
+      totalSelected++;
 
-      if (mins === 30) {
-        thirtyMinCount++;
-        if (!exceptionGroup.includes(name)) {
-          nonExceptionThirtyMinCount++;
-        }
+      // Check if any selected symptom is outside the cold exceptions
+      if (!coldExceptions.includes(name)) {
+        hasNonColdSymptom = true;
       }
     });
 
-    // Rule: If multiple 30-minute symptoms are selected, default to 60 minutes
-    // UNLESS all selected 30-minute symptoms belong exclusively to the exception group.
-    if (thirtyMinCount > 1 && nonExceptionThirtyMinCount > 0) {
+    // RULE:
+    // If more than 1 symptom is checked AND at least one of them is NOT a cold exception,
+    // force the appointment duration to 60 minutes.
+    if (totalSelected > 1 && hasNonColdSymptom) {
       maxMinutes = 60;
     }
 
