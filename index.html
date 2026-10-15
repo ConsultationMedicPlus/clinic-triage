@@ -366,9 +366,11 @@
     let maxMinutes = 0;
     let selectedNames = [];
     
-    // Define the list of cold-like symptoms to exclude from the multi-selection rule
-    const excludedColdSymptoms = ["Cold-like Symptoms", "Cough", "Sinus Congestion", "Sore Throat"];
-    let nonColdCount = 0;
+    let thirtyMinCount = 0;
+    let nonExceptionThirtyMinCount = 0;
+
+    // Define symptoms that are allowed to be combined together at 30 minutes
+    const exceptionGroup = ["Cold-like Symptoms", "Cough", "Sinus Congestion", "Sore Throat"];
 
     checkboxes.forEach(cb => {
       const card = cb.closest('.symptom-card');
@@ -378,14 +380,17 @@
       if (mins > maxMinutes) maxMinutes = mins;
       selectedNames.push(name);
 
-      // Check if this symptom is NOT part of the cold-like group
-      if (!excludedColdSymptoms.includes(name)) {
-        nonColdCount++;
+      if (mins === 30) {
+        thirtyMinCount++;
+        if (!exceptionGroup.includes(name)) {
+          nonExceptionThirtyMinCount++;
+        }
       }
     });
 
-    // Rule: If more than one non-cold symptom is checked, force 60 minutes
-    if (nonColdCount > 1 && maxMinutes < 60) {
+    // Rule: If multiple 30-minute symptoms are selected, default to 60 minutes
+    // UNLESS all selected 30-minute symptoms belong exclusively to the exception group.
+    if (thirtyMinCount > 1 && nonExceptionThirtyMinCount > 0) {
       maxMinutes = 60;
     }
 
